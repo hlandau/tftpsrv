@@ -2,13 +2,15 @@ package tftpsrv
 import "net"
 import "time"
 import "bytes"
+import "fmt"
 
+// Represents a TFTP request.
 type Request struct {
-  // Peer address
-  addr *net.UDPAddr
-  ackChannel chan uint16
-  Filename string
-  Mode string
+  Filename string         // The requested filename.
+  Mode string             // The request mode. Can usually be ignored.
+
+  addr *net.UDPAddr       // Peer address
+  ackChannel chan uint16  // Channel which receives acknowledgement numbers.
   server *Server
   blockSize int
   blockBuf bytes.Buffer
@@ -22,7 +24,9 @@ func (req *Request) flushBlock(isFinal bool) error {
     return nil
   }
 
-  loop:
+  t := time.Now()
+
+loop:
   for {
     if !isFinal && req.blockBuf.Len() != req.blockSize {
       panic("unexpected short block")
@@ -32,13 +36,16 @@ func (req *Request) flushBlock(isFinal bool) error {
       return err
     }
 
-    ta := time.After(time.Duration(req.server.ackTimeout)*time.Millisecond)
     select {
       case brctl := <-req.ackChannel:
         if brctl == req.blockNum {
           break loop
         }
-      case <-ta:
+      case <-time.After(req.server.RetransmissionTimeout):
+        if time.Now().After(t.Add(req.server.RequestTimeout)) {
+          req.terminate()
+          return ErrTimedOut
+        }
     }
   }
 
@@ -51,18 +58,33 @@ func (req *Request) setOption(k, v string) {
   req.options[k] = v
 }
 
-func (req *Request) ClientAddress() net.IP {
-  return req.addr.IP
+// Returns the address of the client which initiated the TFTP transfer.
+func (req *Request) ClientAddress() net.UDPAddr {
+  return *req.addr
 }
 
-func (req *Request) Write(p []byte) (int, error) {
-  L := len(p)
+var ErrClosed   = fmt.Errorf("Request already closed")
+var ErrTimedOut = fmt.Errorf("Request timed out")
+
+// Writes bytes which represent data from the file requested. The data provided
+// is logically appended to the data provided in previous calls to Write. There
+// are no particular requirements on the size of the buffer passed, and the
+// size passed may vary between calls to Write.
+//
+// The amount of data written is returned. Note that not all data provided may
+// be written. Returns ErrClosed if the request has already been terminated.
+func (req *Request) Write(data []byte) (int, error) {
+	if req.terminated {
+		return 0, ErrClosed
+	}
+
+  L := len(data)
   if L > req.blockSize {
     L = req.blockSize
   }
   L -= req.blockBuf.Len()
   if L > 0 {
-    req.blockBuf.Write(p[0:L])
+    req.blockBuf.Write(data[0:L])
   }
 
   if req.blockBuf.Len() < req.blockSize {
@@ -82,6 +104,10 @@ func (req *Request) terminate() {
   req.terminated = true
 }
 
+// This method must be called when the TFTP transfer has completed
+// successfully. The request enters a terminated state in which further
+// operations are not possible. Multiple calls to this method are
+// inconsequential.
 func (req *Request) Close() {
   if req.terminated {
     return
@@ -90,23 +116,28 @@ func (req *Request) Close() {
   req.terminate()
 }
 
-func (req *Request) WriteError(num uint16, msg string) {
-  req.server.sendTftpErrorPacket(req.addr, num, msg)
+// Terminates the TFTP transfer with an error code. The request enters a
+// terminated state in which further operations are not possible. Further calls
+// to this method are inconsequential.
+func (req *Request) WriteError(errNum Error, msg string) {
+  if req.terminated {
+    return
+  }
+  req.server.sendTftpErrorPacket(req.addr, errNum, msg)
   req.terminate()
 }
 
-func (self *Request) name() string {
+func (req *Request) name() string {
   // TODO: Currently we identify requests by a string formed from the address.
   // ...
-  return nameFromAddr(self.addr)
+  return nameFromAddr(req.addr)
 }
 
 // This is run in a per-request goroutine. Blocking is OK.
-func (self *Request) loop(s *Server) {
+func (req *Request) loop() {
   // TODO: TFTP Option Negotiation support.
   // At this point we could perform option negotiation by sending OACK etc.
 
   // Ready for write
-  s.handler(self)
-  // TODO: Error handling.
+  req.server.ReadHandler(req)
 }
