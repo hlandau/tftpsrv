@@ -175,3 +175,5 @@ func (s *Server) handleAck(br *bytes.Buffer, addr *net.UDPAddr) error {
 func (s *Server) handleUnknownOpcode(addr *net.UDPAddr) error {
 	return s.sendTftpErrorPacket(addr, ErrIllegalOpcode, "Unknown opcode")
 }
+
+// © 2014 Hugo Landau <hlandau@devever.net>    GPLv3 or later

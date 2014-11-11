@@ -75,3 +75,5 @@ func (self *Server) sendTftpErrorPacket(
 	_, err = self.socket.WriteToUDP(bw.Bytes(), addr)
 	return err
 }
+
+// © 2014 Hugo Landau <hlandau@devever.net>    GPLv3 or later
