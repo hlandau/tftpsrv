@@ -39,16 +39,16 @@ func (self *Server) sendTftpDataPacket(
 type Error uint16
 
 const (
-	ErrGeneric Error   = 0
-	ErrFileNotFound    = 1
-	ErrAccessViolation = 2
-	ErrDiskFull        = 3
-	ErrIllegalOpcode   = 4
-	ErrUnknownTransfer = 5
-	ErrAlreadyExists   = 6
-	ErrUnknownUser     = 7
-	ErrOptNegFail      = 8
-	)
+	ErrGeneric         Error = 0
+	ErrFileNotFound          = 1
+	ErrAccessViolation       = 2
+	ErrDiskFull              = 3
+	ErrIllegalOpcode         = 4
+	ErrUnknownTransfer       = 5
+	ErrAlreadyExists         = 6
+	ErrUnknownUser           = 7
+	ErrOptNegFail            = 8
+)
 
 func (self *Server) sendTftpErrorPacket(
 	addr *net.UDPAddr, num Error, msg string) error {

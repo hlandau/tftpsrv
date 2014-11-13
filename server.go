@@ -7,23 +7,23 @@ import "time"
 import denet "github.com/hlandau/degoutils/net"
 
 const (
-	opReadRequest   uint16 = 1
-	opWriteRequest         = 2
-	opData                 = 3
-	opAck                  = 4
-	opError                = 5
-	opOAck                 = 6
+	opReadRequest  uint16 = 1
+	opWriteRequest        = 2
+	opData                = 3
+	opAck                 = 4
+	opError               = 5
+	opOAck                = 6
 )
 
 // TFTP server.
 type Server struct {
-	Addr         string  // TCP address to listen on, ":tftp" if empty
-	ReadHandler  func(req *Request) error // Handler for read requests
-	RetransmissionTimeout   time.Duration // Time to wait before retransmitting (default 1s)
-	RequestTimeout          time.Duration // Time to wait before timing out connection (default 4*RetransmissionTimeout)
+	Addr                  string                   // TCP address to listen on, ":tftp" if empty
+	ReadHandler           func(req *Request) error // Handler for read requests
+	RetransmissionTimeout time.Duration            // Time to wait before retransmitting (default 1s)
+	RequestTimeout        time.Duration            // Time to wait before timing out connection (default 4*RetransmissionTimeout)
 
-	socket       *net.UDPConn
-	requests     map[string]*Request
+	socket   *net.UDPConn
+	requests map[string]*Request
 }
 
 // Listens at the specified address (default ":tftp") and starts
@@ -47,11 +47,11 @@ func (s *Server) ListenAndServe() error {
 	s.requests = make(map[string]*Request)
 
 	if s.RetransmissionTimeout == time.Duration(0) {
-		s.RetransmissionTimeout = time.Duration(1)*time.Second
+		s.RetransmissionTimeout = time.Duration(1) * time.Second
 	}
 
 	if s.RequestTimeout == time.Duration(0) {
-		s.RequestTimeout = 4*s.RetransmissionTimeout
+		s.RequestTimeout = 4 * s.RetransmissionTimeout
 	}
 
 	return s.loop()
@@ -86,12 +86,12 @@ func (s *Server) handleDatagram(buf []byte, addr *net.UDPAddr) error {
 	}
 
 	switch opcode {
-		case opReadRequest:
-			return s.handleReadRequest(br, addr)
-		case opAck:
-			return s.handleAck(br, addr)
-		default:
-			return s.handleUnknownOpcode(addr)
+	case opReadRequest:
+		return s.handleReadRequest(br, addr)
+	case opAck:
+		return s.handleAck(br, addr)
+	default:
+		return s.handleUnknownOpcode(addr)
 	}
 }
 
@@ -163,8 +163,8 @@ func (s *Server) handleAck(br *bytes.Buffer, addr *net.UDPAddr) error {
 		// Send acknowledgement number to the request processor.
 		// If the ack channel is full for whatever reason, discard.
 		select {
-			case tx.ackChannel <- bnum:
-			default:
+		case tx.ackChannel <- bnum:
+		default:
 		}
 	}
 
