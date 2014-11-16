@@ -76,4 +76,24 @@ func (self *Server) sendTftpErrorPacket(
 	return err
 }
 
+func (self *Server) sendTftpOptNegPacket(addr *net.UDPAddr, options map[string]string) error {
+	var ec uint16 = opOptAck
+	bw := new(bytes.Buffer)
+
+	err := binary.Write(bw, binary.BigEndian, &ec)
+	if err != nil {
+		return err
+	}
+
+	for k, v := range options {
+		bw.WriteString(k)
+		bw.Write([]byte{0})
+		bw.WriteString(v)
+		bw.Write([]byte{0})
+	}
+
+	_, err = self.socket.WriteToUDP(bw.Bytes(), addr)
+	return err
+}
+
 // © 2014 Hugo Landau <hlandau@devever.net>    GPLv3 or later

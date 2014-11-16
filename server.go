@@ -12,7 +12,7 @@ const (
 	opData                = 3
 	opAck                 = 4
 	opError               = 5
-	opOAck                = 6
+	opOptAck              = 6
 )
 
 // TFTP server.
@@ -26,9 +26,12 @@ type Server struct {
 	requests map[string]*Request
 }
 
-// Listens at the specified address (default ":tftp") and starts
-// processing TFTP requests. Does not return unless an error occurs.
-func (s *Server) ListenAndServe() error {
+// Listens at the specified address (default ":tftp").
+func (s *Server) Listen() error {
+	if s.socket != nil {
+		return nil
+	}
+
 	if s.Addr == "" {
 		s.Addr = ":tftp"
 	}
@@ -44,6 +47,19 @@ func (s *Server) ListenAndServe() error {
 	}
 
 	s.socket = sock
+
+	return nil
+}
+
+// Starts processing TFTP requests. Does not return unless an error occurs.
+// Calls Listen() automatically if it has not already been called. You may call
+// Listen() separately if you need to drop privileges.
+func (s *Server) ListenAndServe() error {
+	err := s.Listen()
+	if err != nil {
+		return err
+	}
+
 	s.requests = make(map[string]*Request)
 
 	if s.RetransmissionTimeout == time.Duration(0) {
@@ -138,7 +154,7 @@ func (s *Server) handleReadRequest(br *bytes.Buffer, addr *net.UDPAddr) error {
 		}
 		opt_v := cstrToString(opt_v_b)
 
-		// Set option
+		// Set option. Ignore errors.
 		req.setOption(opt_k, opt_v)
 	}
 
@@ -166,10 +182,12 @@ func (s *Server) handleAck(br *bytes.Buffer, addr *net.UDPAddr) error {
 		case tx.ackChannel <- bnum:
 		default:
 		}
+
+		return nil
 	}
 
-	// TODO: ACKs for invalid requests are ignored
-	return nil
+	// No valid request, send an ERROR.
+	return s.sendTftpErrorPacket(addr, ErrUnknownTransfer, "Unknown transfer")
 }
 
 func (s *Server) handleUnknownOpcode(addr *net.UDPAddr) error {
