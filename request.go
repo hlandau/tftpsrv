@@ -33,15 +33,15 @@ loop:
 		}
 
 		select {
-			case brctl := <-req.ackChannel:
-				if brctl == blockNum {
-					break loop
-				}
-			case <-time.After(req.server.RetransmissionTimeout):
-				if time.Now().After(t.Add(req.server.RequestTimeout)) {
-					req.terminate()
-					return ErrTimedOut
-				}
+		case brctl := <-req.ackChannel:
+			if brctl == blockNum {
+				break loop
+			}
+		case <-time.After(req.server.RetransmissionTimeout):
+			if time.Now().After(t.Add(req.server.RequestTimeout)) {
+				req.terminate()
+				return ErrTimedOut
+			}
 		}
 	}
 
@@ -74,17 +74,17 @@ func (req *Request) flushBlock(isFinal bool) error {
 
 func (req *Request) setOption(k, v string) error {
 	switch k {
-		case "blksize":
-			n, err := strconv.ParseUint(v, 10, 16)
-			if err != nil {
-				return err
-			}
+	case "blksize":
+		n, err := strconv.ParseUint(v, 10, 16)
+		if err != nil {
+			return err
+		}
 
-			return req.setBlockSize(uint16(n))
+		return req.setBlockSize(uint16(n))
 
-		default:
-			// not supported
-			return fmt.Errorf("not supported")
+	default:
+		// not supported
+		return fmt.Errorf("not supported")
 	}
 }
 
