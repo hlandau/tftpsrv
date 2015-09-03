@@ -90,7 +90,7 @@ func (s *Server) loop() error {
 		// TODO: IPv6 scoped addressing zones.
 		s.handleDatagram(buf, addr)
 	}
-	return nil
+	//return nil
 }
 
 func (s *Server) handleDatagram(buf []byte, addr *net.UDPAddr) error {

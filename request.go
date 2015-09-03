@@ -68,7 +68,7 @@ func (req *Request) flushBlock(isFinal bool) error {
 	}
 
 	req.blockBuf.Truncate(0)
-	req.blockNum += 1
+	req.blockNum++
 	return nil
 }
 
@@ -102,7 +102,10 @@ func (req *Request) ClientAddress() net.UDPAddr {
 	return *req.addr
 }
 
+// Request already closed.
 var ErrClosed = fmt.Errorf("Request already closed")
+
+// Request timed out.
 var ErrTimedOut = fmt.Errorf("Request timed out")
 
 // Writes bytes which represent data from the file requested. The data provided

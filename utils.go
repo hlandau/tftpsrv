@@ -4,7 +4,7 @@ import "fmt"
 import "net"
 
 func nameFromAddr(addr *net.UDPAddr) string {
-	return fmt.Sprintf("%s/%u/%s", addr.String(), addr.Port, addr.Zone)
+	return fmt.Sprintf("%s/%d/%s", addr.String(), addr.Port, addr.Zone)
 }
 
 func cstrToString(b []byte) string {

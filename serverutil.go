@@ -7,9 +7,9 @@ import "bytes"
 /* sendTftpDataPacket
  * ------------------
  */
-func (self *Server) sendTftpDataPacket(
+func (s *Server) sendTftpDataPacket(
 	addr *net.UDPAddr, blockNum uint16, buf []byte) error {
-	var u uint16 = opData
+	u := opData
 	b := new(bytes.Buffer)
 
 	err := binary.Write(b, binary.BigEndian, &u)
@@ -27,7 +27,7 @@ func (self *Server) sendTftpDataPacket(
 		return err
 	}
 
-	_, err = self.socket.WriteToUDP(b.Bytes(), addr)
+	_, err = s.socket.WriteToUDP(b.Bytes(), addr)
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func (self *Server) sendTftpDataPacket(
 	return nil
 }
 
-// TFTP protocol error codes.
+// TFTP protocol error code.
 type Error uint16
 
 const (
@@ -50,9 +50,9 @@ const (
 	ErrOptNegFail            = 8
 )
 
-func (self *Server) sendTftpErrorPacket(
+func (s *Server) sendTftpErrorPacket(
 	addr *net.UDPAddr, num Error, msg string) error {
-	var ec uint16 = opError
+	ec := opError
 	bw := new(bytes.Buffer)
 
 	err := binary.Write(bw, binary.BigEndian, &ec)
@@ -72,12 +72,12 @@ func (self *Server) sendTftpErrorPacket(
 
 	bw.Write([]byte{0})
 
-	_, err = self.socket.WriteToUDP(bw.Bytes(), addr)
+	_, err = s.socket.WriteToUDP(bw.Bytes(), addr)
 	return err
 }
 
-func (self *Server) sendTftpOptNegPacket(addr *net.UDPAddr, options map[string]string) error {
-	var ec uint16 = opOptAck
+func (s *Server) sendTftpOptNegPacket(addr *net.UDPAddr, options map[string]string) error {
+	ec := opOptAck
 	bw := new(bytes.Buffer)
 
 	err := binary.Write(bw, binary.BigEndian, &ec)
@@ -92,7 +92,7 @@ func (self *Server) sendTftpOptNegPacket(addr *net.UDPAddr, options map[string]s
 		bw.Write([]byte{0})
 	}
 
-	_, err = self.socket.WriteToUDP(bw.Bytes(), addr)
+	_, err = s.socket.WriteToUDP(bw.Bytes(), addr)
 	return err
 }
 
