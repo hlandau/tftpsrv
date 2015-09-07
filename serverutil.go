@@ -10,7 +10,7 @@ import "bytes"
 func (s *Server) sendTftpDataPacket(
 	addr *net.UDPAddr, blockNum uint16, buf []byte) error {
 	u := opData
-	b := new(bytes.Buffer)
+	b := &bytes.Buffer{}
 
 	err := binary.Write(b, binary.BigEndian, &u)
 	if err != nil {
