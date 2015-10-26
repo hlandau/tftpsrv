@@ -5,7 +5,6 @@ import "time"
 import "bytes"
 import "fmt"
 import "strconv"
-import "github.com/hlandau/degoutils/log"
 
 // Represents a TFTP request.
 type Request struct {
@@ -151,12 +150,10 @@ func (req *Request) write(data []byte) (int, error) {
 //
 // Returns ErrClosed if the request has already been terminated.
 func (req *Request) Write(data []byte) (int, error) {
-	log.Info("WR: data len=", len(data))
 
 	n := 0
 	for len(data) > 0 {
 		nn, err := req.write(data)
-		log.Info("    r ", nn, "  / ", len(data))
 		n += nn
 		if err != nil {
 			return n, err
