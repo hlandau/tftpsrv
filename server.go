@@ -62,11 +62,11 @@ func (s *Server) ListenAndServe() error {
 
 	s.requests = make(map[string]*Request)
 
-	if s.RetransmissionTimeout == time.Duration(0) {
-		s.RetransmissionTimeout = time.Duration(1) * time.Second
+	if s.RetransmissionTimeout == 0 {
+		s.RetransmissionTimeout = 1 * time.Second
 	}
 
-	if s.RequestTimeout == time.Duration(0) {
+	if s.RequestTimeout == 0 {
 		s.RequestTimeout = 4 * s.RetransmissionTimeout
 	}
 
@@ -81,11 +81,6 @@ func (s *Server) loop() error {
 			continue
 		}
 
-		if len(buf) < 4 {
-			// undersize/oversize datagram, ignore
-			continue
-		}
-
 		// We have a reasonable datagram.
 		// TODO: IPv6 scoped addressing zones.
 		s.handleDatagram(buf, addr)
@@ -94,6 +89,11 @@ func (s *Server) loop() error {
 }
 
 func (s *Server) handleDatagram(buf []byte, addr *net.UDPAddr) error {
+	if len(buf) < 4 {
+		// undersize datagram, ignore
+		return nil
+	}
+
 	var opcode uint16
 	br := bytes.NewBuffer(buf)
 	err := binary.Read(br, binary.BigEndian, &opcode)

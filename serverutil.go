@@ -7,17 +7,15 @@ import "bytes"
 /* sendTftpDataPacket
  * ------------------
  */
-func (s *Server) sendTftpDataPacket(
-	addr *net.UDPAddr, blockNum uint16, buf []byte) error {
-	u := opData
+func (s *Server) sendTftpDataPacket(addr *net.UDPAddr, blockNum uint16, buf []byte) error {
 	b := &bytes.Buffer{}
 
-	err := binary.Write(b, binary.BigEndian, &u)
+	err := binary.Write(b, binary.BigEndian, opData)
 	if err != nil {
 		return err
 	}
 
-	err = binary.Write(b, binary.BigEndian, &blockNum)
+	err = binary.Write(b, binary.BigEndian, blockNum)
 	if err != nil {
 		return err
 	}
@@ -50,17 +48,15 @@ const (
 	ErrOptNegFail            = 8
 )
 
-func (s *Server) sendTftpErrorPacket(
-	addr *net.UDPAddr, num Error, msg string) error {
-	ec := opError
-	bw := new(bytes.Buffer)
+func (s *Server) sendTftpErrorPacket(addr *net.UDPAddr, num Error, msg string) error {
+	bw := bytes.Buffer{}
 
-	err := binary.Write(bw, binary.BigEndian, &ec)
+	err := binary.Write(&bw, binary.BigEndian, opError)
 	if err != nil {
 		return err
 	}
 
-	err = binary.Write(bw, binary.BigEndian, uint16(num))
+	err = binary.Write(&bw, binary.BigEndian, uint16(num))
 	if err != nil {
 		return err
 	}
@@ -70,26 +66,25 @@ func (s *Server) sendTftpErrorPacket(
 		return err
 	}
 
-	bw.Write([]byte{0})
+	bw.WriteByte(0)
 
 	_, err = s.socket.WriteToUDP(bw.Bytes(), addr)
 	return err
 }
 
 func (s *Server) sendTftpOptNegPacket(addr *net.UDPAddr, options map[string]string) error {
-	ec := opOptAck
-	bw := new(bytes.Buffer)
+	bw := bytes.Buffer{}
 
-	err := binary.Write(bw, binary.BigEndian, &ec)
+	err := binary.Write(&bw, binary.BigEndian, opOptAck)
 	if err != nil {
 		return err
 	}
 
 	for k, v := range options {
 		bw.WriteString(k)
-		bw.Write([]byte{0})
+		bw.WriteByte(0)
 		bw.WriteString(v)
-		bw.Write([]byte{0})
+		bw.WriteByte(0)
 	}
 
 	_, err = s.socket.WriteToUDP(bw.Bytes(), addr)
