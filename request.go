@@ -1,10 +1,12 @@
 package tftpsrv
 
-import "net"
-import "time"
-import "bytes"
-import "fmt"
-import "strconv"
+import (
+	"bytes"
+	"fmt"
+	"net"
+	"strconv"
+	"time"
+)
 
 // Represents a TFTP request.
 type Request struct {
@@ -225,5 +227,3 @@ func (req *Request) finishOptionNegotiation() error {
 
 	return nil
 }
-
-// © 2014 Hugo Landau <hlandau@devever.net>    GPLv3 or later

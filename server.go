@@ -1,10 +1,13 @@
 package tftpsrv
 
-import "net"
-import "bytes"
-import "encoding/binary"
-import "time"
-import denet "github.com/hlandau/degoutils/net"
+import (
+	"bytes"
+	"encoding/binary"
+	"net"
+	"time"
+
+	denet "github.com/hlandau/degoutils/net"
+)
 
 const (
 	opReadRequest  uint16 = 1
@@ -193,5 +196,3 @@ func (s *Server) handleAck(br *bytes.Buffer, addr *net.UDPAddr) error {
 func (s *Server) handleUnknownOpcode(addr *net.UDPAddr) error {
 	return s.sendTftpErrorPacket(addr, ErrIllegalOpcode, "Unknown opcode")
 }
-
-// © 2014 Hugo Landau <hlandau@devever.net>    GPLv3 or later

@@ -1,8 +1,10 @@
 package tftpsrv
 
-import "net"
-import "encoding/binary"
-import "bytes"
+import (
+	"bytes"
+	"encoding/binary"
+	"net"
+)
 
 /* sendTftpDataPacket
  * ------------------
@@ -90,5 +92,3 @@ func (s *Server) sendTftpOptNegPacket(addr *net.UDPAddr, options map[string]stri
 	_, err = s.socket.WriteToUDP(bw.Bytes(), addr)
 	return err
 }
-
-// © 2014 Hugo Landau <hlandau@devever.net>    GPLv3 or later
